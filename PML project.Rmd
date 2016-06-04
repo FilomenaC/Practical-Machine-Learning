@@ -16,7 +16,7 @@ output: html_document
 ---
 # Executive Summary
 
-This report investigates the correct execution of an activity performed by six male participants aged between 20-28 years. In particular, they were asked to perform barbell lifts correctly and incorrectly in 5 different ways (*classe*). The scope of this analysys is to create a machines learnig algorithm that predict the correct execution of the exercise using the predictor variables gathered as part of the research. More information about the background of the the Human Activity Recognition research is available from the website [HAR](http://groupware.les.inf.puc-rio.br/har) in the *Weight Lifting Exercise Dataset* section. 
+This report investigates the correct execution of an activity performed by six male participants aged between 20-28 years. In particular, they were asked to perform barbell lifts correctly and incorrectly in 5 different ways (*classe*). The scope of this analysis is to create a machines learning algorithm that predict the correct execution of the exercise using the predictor variables gathered as part of the research. More information about the background of the the Human Activity Recognition research is available from the website [HAR](http://groupware.les.inf.puc-rio.br/har) in the *Weight Lifting Exercise Dataset* section. 
 
 Based on the available data sets, the report explores the accuracy of different prediction models of the target variable *classe*. The Random Forest model delivered the best accuracy rate 99.4% and therefore the lowest Out Of Sample error. Using this model, the requested 20 predictions were made for the test data set.The report is structured in three sections.
 
