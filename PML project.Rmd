@@ -1,0 +1,145 @@
+---
+title: "Machines Learning Project"
+author: "Filomena Ciccarelli"
+date: "4 June 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+---
+title: 'Prediction of the quality of exercise activities'
+author: "Filomena Ciccarelli"
+date: "4th June 2016"
+output: html_document
+---
+# Executive Summary
+
+This report investigates the correct execution of an activity performed by six male participants aged between 20-28 years. In particular, they were asked to perform barbell lifts correctly and incorrectly in 5 different ways (*classe*). The scope of this analysys is to create a machines learnig algorithm that predict the correct execution of the exercise using the predictor variables gathered as part of the research. More information about the background of the the Human Activity Recognition research is available from the website [HAR](http://groupware.les.inf.puc-rio.br/har) in the *Weight Lifting Exercise Dataset* section. 
+
+Based on the available data sets, the report explores the accuracy of different prediction models of the target variable *classe*. The Random Forest model delivered the best accuracy rate 99.4% and therefore the lowest Out Of Sample error. Using this model, the requested 20 predictions were made for the test data set.The report is structured in three sections.
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(echo=TRUE,warning=FALSE, message=FALSE)
+```
+
+## Load data plus Preliminary exploratory data analysis
+
+In this section we load the data and do some exploratory data analysis.
+The training data set for this project is available  [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv). 
+The testing data set is available [here](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv).
+
+```{r}
+trainingRaw<-read.csv("pml-training.csv", na.strings = c("","NA","#DIV/0!"))
+finaltestRaw<-read.csv("pml-testing.csv",na.strings = c("","NA","#DIV/0!"))
+```
+
+```{r, results="hide"}
+str(trainingRaw)
+```
+
+A preliminary data analysis indicates that the there are *timestamp* variables which will be removed from our prediction model since it has no time dependency. We also remove the columns that have  a majority of *NA* values.
+```{r}
+training<-trainingRaw[,-c(1:7)]
+finaltest<- finaltestRaw [, -c(1:7)]
+NAindex<-which (colSums(is.na(training))>nrow(training)/2)
+training <- training[, -NAindex]
+finaltest <- finaltest[, -NAindex]
+```
+The *training* and *testing* data sets have now respectively `r nrow(training)` x `r ncol(training)` and `r nrow(finaltest)` x `r ncol(finaltest)` dimensions.
+
+## Machines Learning
+
+In this section we carry out the *training* set data partioning and explore different prediction models.
+```{r}
+library(caret);library(randomForest);library(rpart)
+library(rattle);library(scales)
+set.seed(1971)
+```
+
+### Data Partition
+
+```{r}
+inTrain<- createDataPartition(training$classe, p=0.7, list= FALSE)
+trainingDS<-training[inTrain,]
+testing <- training [-inTrain,]
+```
+The traing data set for our prediction model has `r nrow(trainingDS)` rows with the following *classe* splittings.
+```{r, echo=FALSE}
+summary(trainingDS$classe)
+```
+
+### Candidate Models
+
+In this section, we fit different models and compare their accuracy results on the *testing* data set.
+
+#### Linear Discrimininat Analysis 
+
+We start our model analysis with a parametric model, LDA. LDA analysis assumes that the data comes from a multivariate normal distribution.
+
+```{r}
+ldaMod<-train(trainingDS$classe~.,data=trainingDS,method="lda")
+ldaPredict<- predict(ldaMod,newdata=testing[,-53]) #53 is the outcome classe column index
+ldaCM <- confusionMatrix(ldaPredict,testing$classe)
+```
+
+The LDA model delivers a low accuracy prediction: 
+
+```{r}
+ldaAcc<-ldaCM$overall[[1]]
+percent(ldaAcc)
+```
+The estimated out of sample (*OOS*) error with the cross validation for this model is `r percent(1.00-ldaAcc)`. LDA method provide a poor predictor model as the *OOS* error is high. In the next sections we explore non-parametric models.
+
+#### Recursive Partitioning Model
+
+We start with a basic classification tree
+
+```{r}
+rpartMod<-train(trainingDS$classe~.,data=trainingDS,method="rpart", tuneLength =30) 
+```
+
+Predict *classe* for cross validation: 
+```{r}
+rpartPredict<- predict(rpartMod,newdata=testing[,-53])
+rpartCM<- confusionMatrix(rpartPredict,testing$classe)
+```
+
+The prediction accuracy improves with this model:
+
+```{r}
+rpartAcc<-rpartCM$overall[[1]]
+percent(rpartAcc)
+```
+The recursive model delivers a *OOB* equal to `r percent(1.00-rpartAcc)`.
+
+#### Random Forests
+
+Random Forests should be a better prediction model for our data set.
+```{r}
+set.seed(1972)
+rfMod<-randomForest(classe~.,data=trainingDS,ntree=200)
+```
+Predicting *classe* for cross validation:
+```{r}
+rfPredict<- predict(rfMod,newdata=testing[,-53])
+rfCM<- confusionMatrix(rfPredict,testing$classe)
+```
+The accuracy of the random forests model on the testing data set is much higher than the previous models
+```{r}
+rfAcc<-rfCM$overall[[1]]
+percent(rfAcc)
+```
+
+The estimated *OBB* with the cross validation data set is equal to `r percent(1.00 - rfAcc)`.
+
+## Conclusions
+
+The Random Forest model is very accurate and we select it for the prediction on the *finaltest* data.
+
+```{r}
+SubmitPredict <-predict(rfMod,newdata=finaltest,type="class")
+SubmitPredict
+```
+
