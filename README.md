@@ -2,4 +2,4 @@
 
 This repo cointains the .Rmd & .md files and the compiled HTML & PDF files performing the analysis for the Coursera Practical Machine Learning course project.
 
-The *html* file can also be found [here](http://rpubs.com/Filomena71/186681)
+The *html* file can also be found [here](http://rpubs.com/Filomena71/186681).
